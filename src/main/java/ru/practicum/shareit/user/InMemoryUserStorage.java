@@ -33,6 +33,13 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
+    public Optional<User> findByEmail(String email) {
+        return users.values().stream()
+                .filter(user -> user.getEmail().equalsIgnoreCase(email))
+                .findFirst();
+    }
+
+    @Override
     public List<User> findAll() {
         return List.copyOf(users.values());
     }
