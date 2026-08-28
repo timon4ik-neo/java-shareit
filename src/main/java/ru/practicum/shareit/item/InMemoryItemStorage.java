@@ -12,8 +12,10 @@ import java.util.concurrent.atomic.AtomicLong;
 @Repository
 public class InMemoryItemStorage implements ItemStorage {
 
+    private static final long INITIAL_ID = 0L;
+
     private final Map<Long, Item> items = new ConcurrentHashMap<>();
-    private final AtomicLong idGenerator = new AtomicLong(0);
+    private final AtomicLong idGenerator = new AtomicLong(INITIAL_ID);
 
     @Override
     public Item save(Item item) {

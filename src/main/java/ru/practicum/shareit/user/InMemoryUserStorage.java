@@ -11,8 +11,10 @@ import java.util.concurrent.atomic.AtomicLong;
 @Repository
 public class InMemoryUserStorage implements UserStorage {
 
+    private static final long INITIAL_ID = 0L;
+
     private final Map<Long, User> users = new ConcurrentHashMap<>();
-    private final AtomicLong idGenerator = new AtomicLong(0);
+    private final AtomicLong idGenerator = new AtomicLong(INITIAL_ID);
 
     @Override
     public User save(User user) {
