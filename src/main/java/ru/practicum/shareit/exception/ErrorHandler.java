@@ -29,7 +29,8 @@ public class ErrorHandler {
         return new ErrorResponse(e.getMessage());
     }
 
-    @ExceptionHandler({MethodArgumentNotValidException.class, MissingRequestHeaderException.class})
+    @ExceptionHandler({MethodArgumentNotValidException.class, MissingRequestHeaderException.class,
+            ValidationException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleBadRequest(Exception e) {
         if (e instanceof MethodArgumentNotValidException validationException) {
@@ -37,6 +38,12 @@ public class ErrorHandler {
             String message = fieldError != null ? fieldError.getDefaultMessage() : "Ошибка валидации";
             return new ErrorResponse(message);
         }
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler(UnsupportedStatusException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleUnsupportedStatus(UnsupportedStatusException e) {
         return new ErrorResponse(e.getMessage());
     }
 }

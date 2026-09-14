@@ -1,21 +1,15 @@
-package ru.practicum.shareit.user;
+package ru.practicum.shareit.booking.dto;
 
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "users")
-public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class ItemShortDto {
     private Long id;
     private String name;
-    private String email;
 }
