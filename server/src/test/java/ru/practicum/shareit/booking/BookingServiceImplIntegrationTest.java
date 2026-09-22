@@ -15,7 +15,6 @@ import ru.practicum.shareit.user.UserService;
 import ru.practicum.shareit.user.dto.UserDto;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -120,28 +119,49 @@ class BookingServiceImplIntegrationTest {
     }
 
     @Test
-    void getAllByBooker_shouldReturnBookingsForState() {
+    void getAllByBookerAndOwner_shouldFilterByEveryState() {
         Long ownerId = createUser("Owner", "owner7@mail.com");
         Long bookerId = createUser("Booker", "booker7@mail.com");
-        ItemDto item = createItem(ownerId, true);
-        bookingService.create(bookerId, futureBooking(item.getId()));
+        LocalDateTime now = LocalDateTime.now();
 
-        List<BookingDto> future = bookingService.getAllByBooker(bookerId, BookingState.FUTURE);
-        List<BookingDto> past = bookingService.getAllByBooker(bookerId, BookingState.PAST);
+        BookingDto futureWaiting = bookingService.create(bookerId,
+                BookingRequestDto.builder().itemId(createItem(ownerId, true).getId())
+                        .start(now.plusDays(1)).end(now.plusDays(2)).build());
+        BookingDto rejected = bookingService.create(bookerId,
+                BookingRequestDto.builder().itemId(createItem(ownerId, true).getId())
+                        .start(now.plusDays(3)).end(now.plusDays(4)).build());
+        bookingService.approve(ownerId, rejected.getId(), false);
+        BookingDto current = bookingService.create(bookerId,
+                BookingRequestDto.builder().itemId(createItem(ownerId, true).getId())
+                        .start(now.minusHours(1)).end(now.plusHours(1)).build());
+        BookingDto past = bookingService.create(bookerId,
+                BookingRequestDto.builder().itemId(createItem(ownerId, true).getId())
+                        .start(now.minusDays(2)).end(now.minusDays(1)).build());
 
-        assertThat(future).hasSize(1);
-        assertThat(past).isEmpty();
-    }
+        assertThat(bookingService.getAllByBooker(bookerId, BookingState.ALL)).hasSize(4);
+        assertThat(bookingService.getAllByBooker(bookerId, BookingState.FUTURE))
+                .extracting(BookingDto::getId).containsExactlyInAnyOrder(futureWaiting.getId(), rejected.getId());
+        assertThat(bookingService.getAllByBooker(bookerId, BookingState.CURRENT))
+                .extracting(BookingDto::getId).containsExactly(current.getId());
+        assertThat(bookingService.getAllByBooker(bookerId, BookingState.PAST))
+                .extracting(BookingDto::getId).containsExactly(past.getId());
+        assertThat(bookingService.getAllByBooker(bookerId, BookingState.WAITING))
+                .extracting(BookingDto::getId)
+                .containsExactlyInAnyOrder(futureWaiting.getId(), current.getId(), past.getId());
+        assertThat(bookingService.getAllByBooker(bookerId, BookingState.REJECTED))
+                .extracting(BookingDto::getId).containsExactly(rejected.getId());
 
-    @Test
-    void getAllByOwner_shouldReturnBookingsForOwnerItems() {
-        Long ownerId = createUser("Owner", "owner8@mail.com");
-        Long bookerId = createUser("Booker", "booker8@mail.com");
-        ItemDto item = createItem(ownerId, true);
-        bookingService.create(bookerId, futureBooking(item.getId()));
-
-        List<BookingDto> all = bookingService.getAllByOwner(ownerId, BookingState.ALL);
-
-        assertThat(all).hasSize(1);
+        assertThat(bookingService.getAllByOwner(ownerId, BookingState.ALL)).hasSize(4);
+        assertThat(bookingService.getAllByOwner(ownerId, BookingState.FUTURE))
+                .extracting(BookingDto::getId).containsExactlyInAnyOrder(futureWaiting.getId(), rejected.getId());
+        assertThat(bookingService.getAllByOwner(ownerId, BookingState.CURRENT))
+                .extracting(BookingDto::getId).containsExactly(current.getId());
+        assertThat(bookingService.getAllByOwner(ownerId, BookingState.PAST))
+                .extracting(BookingDto::getId).containsExactly(past.getId());
+        assertThat(bookingService.getAllByOwner(ownerId, BookingState.WAITING))
+                .extracting(BookingDto::getId)
+                .containsExactlyInAnyOrder(futureWaiting.getId(), current.getId(), past.getId());
+        assertThat(bookingService.getAllByOwner(ownerId, BookingState.REJECTED))
+                .extracting(BookingDto::getId).containsExactly(rejected.getId());
     }
 }

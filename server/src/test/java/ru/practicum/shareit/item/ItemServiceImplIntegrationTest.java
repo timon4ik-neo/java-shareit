@@ -92,6 +92,30 @@ class ItemServiceImplIntegrationTest {
     }
 
     @Test
+    void getById_shouldHideBookingDatesFromNonOwner() {
+        Long ownerId = createUser("Owner", "owner4b@mail.com");
+        Long strangerId = createUser("Stranger", "stranger4b@mail.com");
+        ItemDto created = itemService.create(ownerId, newItemDto("Drill", "d", true));
+
+        ItemDto found = itemService.getById(strangerId, created.getId());
+
+        assertThat(found.getLastBooking()).isNull();
+        assertThat(found.getNextBooking()).isNull();
+    }
+
+    @Test
+    void update_shouldKeepExistingValuesWhenNothingProvided() {
+        Long ownerId = createUser("Owner", "owner4c@mail.com");
+        ItemDto created = itemService.create(ownerId, newItemDto("Drill", "d", true));
+
+        ItemDto updated = itemService.update(ownerId, created.getId(), ItemDto.builder().build());
+
+        assertEquals("Drill", updated.getName());
+        assertEquals("d", updated.getDescription());
+        assertEquals(true, updated.getAvailable());
+    }
+
+    @Test
     void getAllByOwner_shouldReturnOnlyOwnerItems() {
         Long ownerId = createUser("Owner", "owner5@mail.com");
         Long otherOwnerId = createUser("Other", "other5@mail.com");

@@ -53,6 +53,16 @@ class UserServiceImplIntegrationTest {
     }
 
     @Test
+    void update_shouldKeepExistingValuesWhenNothingProvided() {
+        UserDto created = userService.create(newUserDto("Alice", "alice2b@mail.com"));
+
+        UserDto updated = userService.update(created.getId(), UserDto.builder().build());
+
+        assertEquals("Alice", updated.getName());
+        assertEquals("alice2b@mail.com", updated.getEmail());
+    }
+
+    @Test
     void update_shouldThrowWhenNewEmailBelongsToAnotherUser() {
         userService.create(newUserDto("Alice", "taken@mail.com"));
         UserDto bob = userService.create(newUserDto("Bob", "bob@mail.com"));
