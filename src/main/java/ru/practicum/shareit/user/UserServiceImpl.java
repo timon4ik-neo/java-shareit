@@ -12,13 +12,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    private final UserStorage userStorage;
+    private final UserRepository userRepository;
 
     @Override
     public UserDto create(UserDto userDto) {
         checkEmailNotTaken(userDto.getEmail(), null);
         User user = UserMapper.toUser(userDto);
-        return UserMapper.toDto(userStorage.save(user));
+        return UserMapper.toDto(userRepository.save(user));
     }
 
     @Override
@@ -33,11 +33,11 @@ public class UserServiceImpl implements UserService {
             existingUser.setEmail(userDto.getEmail());
         }
 
-        return UserMapper.toDto(userStorage.update(existingUser));
+        return UserMapper.toDto(userRepository.save(existingUser));
     }
 
     private void checkEmailNotTaken(String email, Long userId) {
-        userStorage.findByEmail(email)
+        userRepository.findByEmail(email)
                 .filter(user -> !user.getId().equals(userId))
                 .ifPresent(user -> {
                     throw new EmailAlreadyExistsException("Email " + email + " уже используется");
@@ -51,18 +51,19 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserDto> getAll() {
-        return userStorage.findAll().stream()
+        return userRepository.findAll().stream()
                 .map(UserMapper::toDto)
                 .toList();
     }
 
     @Override
     public void delete(Long userId) {
-        userStorage.deleteById(userId);
+        getUserOrThrow(userId);
+        userRepository.deleteById(userId);
     }
 
     private User getUserOrThrow(Long userId) {
-        return userStorage.findById(userId)
+        return userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id=" + userId + " не найден"));
     }
 }
